@@ -1,4 +1,4 @@
-# Combined_Stochastic_Model1
+# Combined_Stochastic_Model
 
 Code complimenting the project and paper "Combined Stochastic Model for the Evaluation of Cancer Progression and Patient Trajectories".
 
