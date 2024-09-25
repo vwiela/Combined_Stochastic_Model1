@@ -3,6 +3,12 @@
 
 output/*
 !output/additive_treated_joined_optimization_100_starts_LBFGS_distributed_Analytic.jld2
+!output/benchmark_cell_division_likelihoods_500_patients_[0.5, 0.01, 0.003, 0.03, 1.0, 0.001, 0.002].csv
+!output/benchmark_proportional_likelihoods_500_patients_[0.5, 0.01, 0.003, 0.03, 1.0, 0.001, 0.002].csv
+!output/cell_division_joined_optimization_100_starts_LBFGS_distributed_Analytic.jld2
+!output/proportional_joined_optimization_100_starts_LBFGS_distributed_Analytic.jld2
+!output/sparse_proportional_joined_optimization_100_starts_LBFGS_distributed_Analytic.jld2
+
 
 # Figures and stuff for the paper
 figures/
