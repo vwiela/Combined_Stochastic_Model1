@@ -88,7 +88,7 @@ end
     npat = 500;
 
     # load data
-    data_path = joinpath(dir, "second_model/data/simplified_model/cell_division_data_$(npat)_patients_$(θ)_promise2.jld2")
+    data_path = joinpath(dir, "data/cell_division_data_$(npat)_patients_$(θ)_promise2.jld2")
     patient_data = load(data_path, "cell_division_data");
 
 
@@ -157,7 +157,7 @@ d_size = 0.001
 d_metastasis = 0.002
 θ = [beta, m_basal, m_size, m_sigma, m_order, d_size, d_metastasis]
 
-h5open(joinpath(dir, "output/sampling/sampling_cell_division_data_"*string(nworkers())*"chs_"*string(niter)*"it_$(θ).h5"), "w") do f
+h5open(joinpath(dir, "output/sampling_cell_division_data_"*string(nworkers())*"chs_"*string(niter)*"it_$(θ).h5"), "w") do f
   write(f, complete_chain)
 end
 

@@ -113,11 +113,11 @@ if DATA_TYPE== "sparse"
     if MODEL !="proportional"
         error("Sparse data only available for proportional model.")
     end
-    data_path = joinpath(dir,"data/simplified_model/$(MODEL)_sparse_data_$(npat)_patients_$(θ).jld2")
+    data_path = joinpath(dir,"data/$(MODEL)_sparse_data_$(npat)_patients_$(θ).jld2")
     patient_data = load(data_path)["sparse_$(MODEL)_data"]
 else
     npat = 500
-    data_path = joinpath(dir,"data/simplified_model/$(MODEL)_data_$(npat)_patients_$(θ).jld2")
+    data_path = joinpath(dir,"data/$(MODEL)_data_$(npat)_patients_$(θ).jld2")
     patient_data = load(data_path)["$(MODEL)_data"]
 end
 
@@ -161,9 +161,9 @@ result = Dict("optimization_results" => results_list, "par_names" => par_names)
 
 # save results
 if DATA_TYPE== "sparse"
-    save_path = joinpath(dir, "output/results/$(MODEL)_$(OPTIM_TYPE)_optimization_$(n_starts)_starts_$(optimizer)_sparse_data_$(LLH_TYPE).jld2")
+    save_path = joinpath(dir, "output/$(MODEL)_$(OPTIM_TYPE)_optimization_$(n_starts)_starts_$(optimizer)_sparse_data_$(LLH_TYPE).jld2")
 else
-    save_path = joinpath(dir, "output/results/$(MODEL)_$(OPTIM_TYPE)_optimization_$(n_starts)_starts_$(optimizer)_$(LLH_TYPE).jld2")
+    save_path = joinpath(dir, "output/$(MODEL)_$(OPTIM_TYPE)_optimization_$(n_starts)_starts_$(optimizer)_$(LLH_TYPE).jld2")
 end
 
 save(save_path, "results", result)

@@ -1,3 +1,5 @@
+dir = dirname(pwd());
+
 using DifferentialEquations
 using JumpProcesses
 using Plots
@@ -41,7 +43,7 @@ import .ProportionalLikelihoods as PL
 
 # load data
 npat = 500
-data_path = joinpath(pwd(),"data/simplified_model/proportional_data_$(npat)_patients_$(θ).jld2")
+data_path = joinpath(dir,"data/proportional_data_$(npat)_patients_$(θ).jld2")
 proportional_data = load(data_path)["proportional_data"];
 
 log_lb_x0 = [-0.75, -7, -7, -9, -9]
@@ -65,7 +67,7 @@ end
 
 
 # save time_benchmark_df
-CSV.write("output/results/benchmark_proportional_likelihoods_$(npat)_patients_$(θ).csv", time_benchmark_df)
+CSV.write(joinpath(dir, "output/benchmark_proportional_likelihoods_$(npat)_patients_$(θ).csv"), time_benchmark_df)
 
 # next the cell division model
 include("CellDivisionLikelihoods.jl")
@@ -73,7 +75,7 @@ import .CellDivisionLikelihoods as CDL
 
 # load data
 npat = 500
-data_path = joinpath(pwd(),"data/simplified_model/cell_division_data_$(npat)_patients_$(θ).jld2")
+data_path = joinpath(dir,"data/cell_division_data_$(npat)_patients_$(θ).jld2")
 cell_division_data = load(data_path)["cell_division_data"];
 
 
@@ -97,4 +99,4 @@ for i in 1:100
 end
 
 # save time_benchmark_df
-CSV.write("output/results/benchmark_cell_division_likelihoods_$(npat)_patients_$(θ).csv", time_benchmark_df)
+CSV.write(joinpath(dir,"output/benchmark_cell_division_likelihoods_$(npat)_patients_$(θ).csv"), time_benchmark_df)

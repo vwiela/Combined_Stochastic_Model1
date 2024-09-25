@@ -91,7 +91,7 @@ end
 
     
     # load data
-    data_path = joinpath(dir, "second_model/data/simplified_model/proportional_data_$(npat)_patients_$(θ).jld2")
+    data_path = joinpath(dir, "data/proportional_data_$(npat)_patients_$(θ).jld2")
     patient_data = load(data_path, "proportional_data");
 
 
@@ -151,7 +151,7 @@ chs = MCMCChains.Chains(chains, [:beta, :m_basal, :m_size, :d_size, :d_metastasi
 complete_chain = set_section(chs, Dict(:parameters => [:beta, :m_basal, :m_size, :d_size, :d_metastasis], :internals => [:lp]))
 
 
-h5open(joinpath(dir, "output/simplified_model/sampling_proportional_data_"*string(nworkers())*"chs_"*string(niter)*"it_$(θ).h5"), "w") do f
+h5open(joinpath(dir, "output/sampling_proportional_data_"*string(nworkers())*"chs_"*string(niter)*"it_$(θ).h5"), "w") do f
   write(f, complete_chain)
 end
 

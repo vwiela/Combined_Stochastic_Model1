@@ -78,7 +78,7 @@ end
     npat = 500;
 
     # load data
-    load_path = joinpath(dir, "data/simplified_model/gompertz_data_$(npat)_patients_$(θ).jld2")
+    load_path = joinpath(dir, "data/gompertz_data_$(npat)_patients_$(θ).jld2")
     patient_data = load(load_path, "gompertz_dataf");
 
 
@@ -148,7 +148,7 @@ d_metastasis = 0.003
 
 θ = [K, alpha, m_basal, m_size, d_size, d_metastasis];
 
-h5open(joinpath(dir, "output/simplified_model/sampling_gompertz_"*string(nworkers())*"chs_"*string(niter)*"it_$(θ).h5"), "w") do f
+h5open(joinpath(dir, "output/sampling_gompertz_"*string(nworkers())*"chs_"*string(niter)*"it_$(θ).h5"), "w") do f
   write(f, complete_chain)
 end
 

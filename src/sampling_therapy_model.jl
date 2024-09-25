@@ -99,7 +99,7 @@ end
     npat = 100;
 
     # load data
-    data_path = joinpath(dir, "second_model/data/simplified_model/additive_treated_data_$(npat)_patients_$(θ).jld2")
+    data_path = joinpath(dir, "data/additive_treated_data_$(npat)_patients_$(θ).jld2")
     patient_data = load(data_path, "additive_treated_data");
 
 
@@ -159,7 +159,7 @@ chs = MCMCChains.Chains(chains, [:beta0, :rho, :delta, :m_basal, :m_size, :d_siz
 complete_chain = set_section(chs, Dict(:parameters => [:beta0, :rho, :delta, :m_basal, :m_size, :d_size, :d_metastasis], :internals => [:lp]))
 
 
-h5open(joinpath(dir, "output/simplified_model/sampling_treated_data_$(npat)p_"*string(nworkers())*"chs_$(niter)it_$(θ).h5"), "w") do f
+h5open(joinpath(dir, "output/sampling_treated_data_$(npat)p_"*string(nworkers())*"chs_$(niter)it_$(θ).h5"), "w") do f
   write(f, complete_chain)
 end
 
