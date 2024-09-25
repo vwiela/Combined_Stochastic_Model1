@@ -104,7 +104,7 @@ end
 
 
     # settings for the sampler
-    niter = 100
+    niter = 50000
     init_par = [0.5, 0.45, 0.2, 0.01, 0.003, 0.001, 0.002];
 
     # define negative loglikelihood
@@ -153,7 +153,7 @@ for j in 2:nworkers()
 end
 
 
-niter = 100
+niter = 50000
 
 chs = MCMCChains.Chains(chains, [:beta0, :rho, :delta, :m_basal, :m_size, :d_size, :d_metastasis, :lp])
 complete_chain = set_section(chs, Dict(:parameters => [:beta0, :rho, :delta, :m_basal, :m_size, :d_size, :d_metastasis], :internals => [:lp]))
