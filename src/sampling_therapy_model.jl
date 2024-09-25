@@ -96,7 +96,7 @@ end
     S0 = 0.065;
 
     # number of patients to use 
-    npat = 100;
+    npat = 500;
 
     # load data
     data_path = joinpath(dir, "data/additive_treated_data_$(npat)_patients_$(θ).jld2")
