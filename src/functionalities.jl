@@ -1,17 +1,22 @@
 
 using MCMCChains
-using StatsPlots
+# using StatsPlots
 using MCMCDiagnosticTools
 using Combinatorics
 using CSV
 using DataFrames
+using DataFrames
+using Survival
+using StatsBase
 
 using DifferentialEquations
 using JumpProcesses
-using Plots
+# using Plots
 using Statistics
 using Distributions
 using Random
+
+using Interpolations
 
 # include the simulation algorithm
 include("general_MNR_simulation_algorithm.jl")
@@ -654,3 +659,216 @@ function custom_sankey(
         )
     end
 end;
+
+function summarize_patient_data(df::DataFrame)
+    # Number of unique patients
+    num_patients = length(unique(df.patient_id))
+    short_df = df[df.time .<= 15.0, :]
+    # Patients who died
+    died_patients = unique(short_df[short_df.death .== 1, :patient_id])
+    num_died_patients = length(died_patients)
+    fraction_died = num_died_patients / num_patients
+
+    # Patients who got metastasis
+    metastasis_patients = unique(short_df[short_df.metastasis .== 1, :patient_id])
+    num_metastasis_patients = length(metastasis_patients)
+    fraction_metastasis = num_metastasis_patients / num_patients
+
+    # Compute time until first metastasis per patient
+    metastasis_times = [
+        minimum(df[(df.patient_id .== p) .& (df.metastasis .== 1), :time]) 
+        for p in metastasis_patients
+    ]
+    mean_time_to_metastasis = isempty(metastasis_times) ? missing : mean(metastasis_times)
+    median_time_to_metastasis = isempty(metastasis_times) ? missing : median(metastasis_times)
+
+    # Mean & median time from metastasis to death
+    metastasis_to_death_times = [
+        maximum(df[(df.patient_id .== p) .& (df.death .== 1), :time]) - minimum(df[(df.patient_id .== p) .& (df.metastasis .== 1), :time])
+        for p in metastasis_patients if any((df.patient_id .== p) .& (df.death .== 1))
+    ]
+    mean_time_metastasis_to_death = isempty(metastasis_to_death_times) ? missing : mean(metastasis_to_death_times)
+    median_time_metastasis_to_death = isempty(metastasis_to_death_times) ? missing : median(metastasis_to_death_times)
+
+    # Return dictionary
+    return Dict(
+        "Number of patients" => num_patients,
+        "Number of patients died 15y." => num_died_patients,
+        "Fraction of patients died 15y." => fraction_died,
+        "Number of patients got metastasis 15y." => num_metastasis_patients,
+        "Fraction of patients got metastasis 15y." => fraction_metastasis,
+        "Mean Time until metastasis" => mean_time_to_metastasis,
+        "Median Time until metastasis" => median_time_to_metastasis,
+        "Mean Time from Metastasis to death" => mean_time_metastasis_to_death,
+        "Median Time from Metastasis to death" => median_time_metastasis_to_death
+    )
+end
+
+
+function plot_survival_curves(df::DataFrame; display=true)
+    endtime = maximum(df.time)
+    # Compute overall survival (all patients)
+    surv_times = df[df.death .== 1, :time];
+    surv_data = DataFrame(Time = surv_times, Event = ones(length(surv_times)))
+    n_survived = length(unique(df.patient_id)) - length(surv_times)
+    surv_data = vcat(surv_data, DataFrame(Time = endtime*ones(n_survived), Event = zeros(n_survived)));
+    surv_fit = fit(KaplanMeier, surv_data.Time, surv_data.Event)
+    # Plot Overall Survival
+    plt1 = plot(surv_fit.events.time, surv_fit.survival, label="Overall survival", lw=2, ylimit=(0,1), legend=:bottomright, xlimit=(0,15))
+    if display
+        display(plt1)
+    end
+    # Identify unique patients who had at least one metastasis event
+    meta_patients = unique(df[df.metastasis .> 0, :patient_id])
+
+    # Filter the DataFrame to include only those patients
+    meta_df = filter(row -> row.patient_id ∈ meta_patients, df)
+
+    # Compute survival after metastasis
+    meta_surv_times = [meta_df[(meta_df.patient_id .== p) .&& (meta_df.death .== 1), :time] .- minimum(meta_df[(meta_df.patient_id .== p) .&& (meta_df.metastasis .> 0), :time])
+                       for p in meta_patients];
+    meta_surv_times = [!isempty(meta_surv_times[i]) ?  meta_surv_times[i][1] : NaN for i in eachindex(meta_surv_times)][isfinite.([!isempty(meta_surv_times[i]) ?  meta_surv_times[i][1] : NaN for i in 1:length(meta_surv_times)])]
+    meta_surv_data = DataFrame(Time = meta_surv_times, Event = ones(length(meta_surv_times)))
+    meta_n_survived = length(meta_patients) - length(meta_surv_times)
+    meta_surv_data = vcat(meta_surv_data, DataFrame(Time = endtime*ones(meta_n_survived), Event = zeros(meta_n_survived)));
+    meta_surv_fit = fit(KaplanMeier, meta_surv_data.Time, meta_surv_data.Event)
+
+    
+    # Plot Survival After Metastasis
+    plt2 = plot(meta_surv_fit.events.time, meta_surv_fit.survival, label="Survival After Metastasis", lw=2, ylimit=(0,1), xlimit=(0,15), legend=:bottomright)
+    if display
+        display(plt2)
+    end
+    return surv_fit, meta_surv_fit  # Return fitted models for further analysis if needed
+end
+
+function single_compare_to_validation(df, validation_data_dict, group)
+    if group ∉ keys(validation_data_dict["OS"])
+        error("Group not found in validation data dictionary")
+    end
+    os_survival_data = validation_data_dict["OS"][group]
+    met_survival_data = validation_data_dict["MET"][group]
+
+    surv_fit, met_surv_fit = plot_survival_curves(df, display=false)
+
+    # overall survival plot
+    os_plt = plot(os_survival_data[!,:time], os_survival_data[!,:survival] ./100, label=group, xlabel="Time (years)", ylabel="Survival", title="OS Survival", legend=:topright, color="red")
+    plot!(os_plt, surv_fit.events.time, surv_fit.survival, label="Model", lw=1, linestyle=:dash, color="blue")
+    plot!(os_plt, surv_fit.events.time, [x[1]-0.02 for x in confint(surv_fit)], fillrange=[x[2]+0.02 for x in confint(surv_fit)], fillalpha=0.1, linealpha=0, color="blue", label=false)
+    plot!(os_plt, xlimit=(0,15), ylimit=(0,1))
+    display(os_plt)
+
+    # metastasis survival plot
+    met_plt = plot(met_survival_data[!,:time], met_survival_data[!,:survival] ./100, label=group, xlabel="Time (years)", ylabel="Survival", title="Metastasis Survival", legend=:topright, color="red")
+    plot!(met_plt, met_surv_fit.events.time, met_surv_fit.survival, label="Model", lw=1, linestyle=:dash, color="blue")
+    plot!(met_plt, met_surv_fit.events.time, [x[1] for x in confint(met_surv_fit)], fillrange=[x[2] for x in confint(met_surv_fit)], fillalpha=0.1, linealpha=0, color="blue", label=false)
+    plot!(met_plt, xlimit=(0,15), ylimit=(0,1))
+    display(met_plt)
+
+    return os_plt, met_plt
+end
+
+function joint_compare_to_valdiation(model_data_dict, validation_data_dict)
+    pT1_data = model_data_dict["pT1"]
+    pT2_data = model_data_dict["pT2"]
+    pT3_data = model_data_dict["pT3"]
+    pT4_data = model_data_dict["pT4"]
+
+    # overall survival plot
+    pT1_surv_fit, pT1_met_fit = plot_survival_curves(pT1_data, display=false)
+    pT2_surv_fit, pT2_met_fit = plot_survival_curves(pT2_data, display=false)
+    pT3_surv_fit, pT3_met_fit = plot_survival_curves(pT3_data, display=false)
+    pT4_surv_fit, pT4_met_fit = plot_survival_curves(pT4_data, display=false)
+
+    pT1_survival_data = survival_data["OS"]["pT1"]
+    pT2_survival_data = survival_data["OS"]["pT2"]
+    pT3_survival_data = survival_data["OS"]["pT3"]
+    pT4_survival_data = survival_data["OS"]["pT4"]
+
+    os_plt = plot(pT1_survival_data[!,:time], pT1_survival_data[!,:survival] ./100, label="pT1", xlabel="Time (years)", ylabel="Survival", title="OS Survival", color="red")
+    plot!(os_plt, pT1_surv_fit.events.time, pT1_surv_fit.survival, label="Model", lw=1, linestyle=:dash, color="red")
+    plot!(os_plt, pT1_surv_fit.events.time, [x[1]-0.02 for x in confint(pT1_surv_fit)], fillrange=[x[2]+0.02 for x in confint(pT1_surv_fit)], fillalpha=0.1, linealpha=0, color="red", label=false)
+
+    plot!(os_plt, pT2_survival_data[!,:time], pT2_survival_data[!,:survival] ./100, label="pT2", xlabel="Time (years)", ylabel="Survival", title="OS Survival", color="green")
+    plot!(os_plt, pT2_surv_fit.events.time, pT2_surv_fit.survival, label="Model", lw=1, linestyle=:dash, color="green")
+    plot!(os_plt, pT2_surv_fit.events.time, [x[1]-0.02 for x in confint(pT2_surv_fit)], fillrange=[x[2]+0.02 for x in confint(pT2_surv_fit)], fillalpha=0.1, linealpha=0, color="green", label=false)
+
+    plot!(os_plt, pT3_survival_data[!,:time], pT3_survival_data[!,:survival] ./100, label="pT3", xlabel="Time (years)", ylabel="Survival", title="OS Survival", color="blue")
+    plot!(os_plt, pT3_surv_fit.events.time, pT3_surv_fit.survival, label="Model", lw=1, linestyle=:dash, color="blue")
+    plot!(os_plt, pT3_surv_fit.events.time, [x[1]-0.02 for x in confint(pT3_surv_fit)], fillrange=[x[2]+0.02 for x in confint(pT3_surv_fit)], fillalpha=0.1, linealpha=0, color="blue", label=false)
+
+    plot!(os_plt, pT4_survival_data[!,:time], pT4_survival_data[!,:survival] ./100, label="pT4", xlabel="Time (years)", ylabel="Survival", title="OS Survival", color="brown")
+    plot!(os_plt, pT4_surv_fit.events.time, pT4_surv_fit.survival, label="Model", lw=1, linestyle=:dash, color="brown")
+    plot!(os_plt, pT4_surv_fit.events.time, [x[1]-0.02 for x in confint(pT4_surv_fit)], fillrange=[x[2]+0.02 for x in confint(pT4_surv_fit)], fillalpha=0.1, linealpha=0, color="brown", label=false)
+
+
+    plot!(os_plt, xlimit=(0,15), ylimit=(0,1), legend=:bottomleft)
+    display(os_plt)
+
+    pT1_met_survival_data = survival_data["MET"]["pT1"]
+    pT2_met_survival_data = survival_data["MET"]["pT2"]
+    pT3_met_survival_data = survival_data["MET"]["pT3"]
+    pT4_met_survival_data = survival_data["MET"]["pT4"]
+
+    met_plt = plot(pT1_met_survival_data[!,:time], pT1_met_survival_data[!,:survival] ./100, label="pT1", xlabel="Time (years)", ylabel="Survival", title="MET Survival", color="red")
+    plot!(met_plt, pT1_met_fit.events.time, pT1_met_fit.survival, label="Model", lw=1, linestyle=:dash, color="red")
+    plot!(met_plt, pT1_met_fit.events.time, [x[1] for x in confint(pT1_met_fit)], fillrange=[x[2] for x in confint(pT1_met_fit)], fillalpha=0.1, linealpha=0, color="red", label=false)
+
+    plot!(met_plt, pT2_met_survival_data[!,:time], pT2_met_survival_data[!,:survival] ./100, label="pT2", xlabel="Time (years)", ylabel="Survival", title="MET Survival", color="green")
+    plot!(met_plt, pT2_met_fit.events.time, pT2_met_fit.survival, label="Model", lw=1, linestyle=:dash, color="green")
+    plot!(met_plt, pT2_met_fit.events.time, [x[1] for x in confint(pT2_met_fit)], fillrange=[x[2] for x in confint(pT2_met_fit)], fillalpha=0.1, linealpha=0, color="green", label=false)
+
+    plot!(met_plt, pT3_met_survival_data[!,:time], pT3_met_survival_data[!,:survival] ./100, label="pT3", xlabel="Time (years)", ylabel="Survival", title="MET Survival", color="blue")
+    plot!(met_plt, pT3_met_fit.events.time, pT3_met_fit.survival, label="Model", lw=1, linestyle=:dash, color="blue")
+    plot!(met_plt, pT3_met_fit.events.time, [x[1] for x in confint(pT3_met_fit)], fillrange=[x[2] for x in confint(pT3_met_fit)], fillalpha=0.1, linealpha=0, color="blue", label=false)
+
+    plot!(met_plt, pT4_met_survival_data[!,:time], pT4_met_survival_data[!,:survival] ./100, label="pT4", xlabel="Time (years)", ylabel="Survival", title="MET Survival", color="brown")
+    plot!(met_plt, pT4_met_fit.events.time, pT4_met_fit.survival, label="Model", lw=1, linestyle=:dash, color="brown")
+    plot!(met_plt, pT4_met_fit.events.time, [x[1] for x in confint(pT4_met_fit)], fillrange=[x[2] for x in confint(pT4_met_fit)], fillalpha=0.1, linealpha=0, color="brown", label=false)
+
+
+    plot!(met_plt, xlimit=(0,15), ylimit=(0,1),  legend=:topright)
+    display(met_plt)
+    return(os_plt, met_plt)
+end
+
+function mean_survival_curve(km_fits, survival_data, surv_type, group)
+    # Step 1: Define common time grid (500 points between 0 and 15)
+    common_times = range(0, 15, length=500)
+    
+    # Step 2: Interpolate survival probabilities for each fit
+    interpolated_survivals = []
+    
+    for fit in km_fits
+        times = fit.events.time
+        survival_probs = fit.survival  # Extract time and survival probability vectors
+        
+        # Ensure step function interpolation
+        itp = LinearInterpolation(times, survival_probs, extrapolation_bc=Flat()) 
+        
+        # Evaluate at common time grid
+        push!(interpolated_survivals, itp.(common_times))
+    end
+
+    # Convert list to matrix (each row is a fit, each column is a time point)
+    survival_matrix = hcat(interpolated_survivals...)
+
+    # Step 3: Compute statistics
+    mean_survival = mean(survival_matrix, dims=2)[:]  # Mean survival probability at each time
+    ci_lower = quantile.(eachrow(survival_matrix), 0.025)  # 2.5% percentile
+    ci_upper = quantile.(eachrow(survival_matrix), 0.975)  # 97.5% percentile
+
+    # Step 4: Plot against survival data
+    survival_data = survival_data[surv_type][group]
+
+    plt= plot(survival_data[!,:time], survival_data[!,:survival] ./100, label="$(group) data", xlabel="Time (years)", ylabel="Survival probability", title="$(surv_type) Survival", lw=2, color="red")
+    plot!(plt, common_times, mean_survival, label="Model Mean Survival", lw=2, linestyle=:dash, color="blue")
+    plot!(plt, common_times, mean_survival, ribbon=(ci_upper .- ci_lower) ./ 2, fillalpha=0.3, lw=0, color="blue", label=false)
+    plot!(plt, xlimit=(0,15), ylimit=(0,1), legend=:bottomleft)
+
+    plot!(plt, figsize=(1200,1200))
+    display(plt)
+    savefig(plt, "output/figures/model_validation_$(surv_type)_$(group)_plot.pdf")
+
+    return common_times, mean_survival, ci_lower, ci_upper
+end

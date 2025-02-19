@@ -1,4 +1,4 @@
-module ProportionalLikelihoods
+module MissingProportionalLikelihoods
 
 using DifferentialEquations
 using JumpProcesses
@@ -503,113 +503,6 @@ function NumericSurvivalProbability6(t1, t2, beta, m_basal, m_size, d_size, d_me
     return integral
 end
 
-# Numeric integration with FastGaussQuadrature for AD compatibility
-
-function FGIntegral1(t1, t2, beta, m_basal, m_size, d_size, d_metas, S0, n)
-    # transform t from [-1, 1] to [t1, t2] first
-    x, w = gausslegendre(20)
-    ttrans = t1.+((t2-t1)/2).*(x.+1)
-    vals = lambdaN.(ttrans, beta, m_basal, m_size, S0) .* 
-        Phi.(t1, ttrans, beta, d_size, d_metas, S0, n) .* 
-        Phi.(ttrans, t2, beta, d_size, d_metas, S0, n+1) .*
-        (t2-t1)/2 # derivative from change of integration limits.
-    return dot(w, vals) 
-end
-
-function FGSurvivalProbability1(t1, t2, beta, m_basal, m_size, d_size, d_metas, S0, n)
-
-    return (1/(LambdaN(t1, t2, beta, m_basal, m_size, S0))) * 
-    FGIntegral1(t1, t2, beta, m_basal, m_size, d_size, d_metas, S0, n)
-end
-
-function FGIntegral2(t1, t2, beta, m_basal, m_size, d_size, d_metas, S0, n)
-    # transform t from [-1, 1] to [t1, t2] first
-    x, w = gausslegendre(20)
-    ttrans = t1.+((t2-t1)/2).*(x.+1)
-    vals = lambdaN.(ttrans, beta, m_basal, m_size, S0) .*
-        Phi.(t1, ttrans, beta, d_size, d_metas, S0, n) .* 
-        FGIntegral1.(ttrans, t2, beta, m_basal, m_size, d_size, d_metas, S0, n+1) .*
-        (t2-t1)/2 # derivative from change of integration limits.
-    return dot(w, vals) 
-end
-
-function FGSurvivalProbability2(t1, t2, beta, m_basal, m_size, d_size, d_metas, S0, n)
-
-    return (2/(LambdaN(t1, t2, beta, m_basal, m_size, S0))^2) * 
-    FGIntegral2(t1, t2, beta, m_basal, m_size, d_size, d_metas, S0, n)
-end
-
-
-function FGIntegral3(t1, t2, beta, m_basal, m_size, d_size, d_metas, S0, n)
-    # transform t from [-1, 1] to [t1, t2] first
-    x, w = gausslegendre(20)
-    ttrans = t1.+((t2-t1)/2).*(x.+1)
-    vals = lambdaN.(ttrans, beta, m_basal, m_size, S0) .*
-        Phi.(t1, ttrans, beta, d_size, d_metas, S0, n) .* 
-        FGIntegral2.(ttrans, t2, beta, m_basal, m_size, d_size, d_metas, S0, n+1) .*
-        (t2-t1)/2 # derivative from change of integration limits.
-    return dot(w, vals) 
-end
-
-function FGSurvivalProbability3(t1, t2, beta, m_basal, m_size, d_size, d_metas, S0, n)
-
-    return (6/(LambdaN(t1, t2, beta, m_basal, m_size, S0))^3) * 
-    FGIntegral3(t1, t2, beta, m_basal, m_size, d_size, d_metas, S0, n)
-end
-
-
-function FGIntegral4(t1, t2, beta, m_basal, m_size, d_size, d_metas, S0, n)
-    # transform t from [-1, 1] to [t1, t2] first
-    x, w = gausslegendre(20)
-    ttrans = t1.+((t2-t1)/2).*(x.+1)
-    vals = lambdaN.(ttrans, beta, m_basal, m_size, S0) .*
-        Phi.(t1, ttrans, beta, d_size, d_metas, S0, n) .* 
-        FGIntegral3.(ttrans, t2, beta, m_basal, m_size, d_size, d_metas, S0, n+1) .*
-        (t2-t1)/2 # derivative from change of integration limits.
-    return dot(w, vals) 
-end
-
-function FGSurvivalProbability4(t1, t2, beta, m_basal, m_size, d_size, d_metas, S0, n)
-
-    return (24/(LambdaN(t1, t2, beta, m_basal, m_size, S0))^4) * 
-    FGIntegral4(t1, t2, beta, m_basal, m_size, d_size, d_metas, S0, n)
-end
-
-function FGIntegral5(t1, t2, beta, m_basal, m_size, d_size, d_metas, S0, n)
-    # transform t from [-1, 1] to [t1, t2] first
-    x, w = gausslegendre(20)
-    ttrans = t1.+((t2-t1)/2).*(x.+1)
-    vals = lambdaN.(ttrans, beta, m_basal, m_size, S0) .*
-        Phi.(t1, ttrans, beta, d_size, d_metas, S0, n) .* 
-        FGIntegral4.(ttrans, t2, beta, m_basal, m_size, d_size, d_metas, S0, n+1) .*
-        (t2-t1)/2 # derivative from change of integration limits.
-    return dot(w, vals) 
-end
-
-function FGSurvivalProbability5(t1, t2, beta, m_basal, m_size, d_size, d_metas, S0, n)
-
-    return (120/(LambdaN(t1, t2, beta, m_basal, m_size, S0))^5) * 
-    FGIntegral5(t1, t2, beta, m_basal, m_size, d_size, d_metas, S0, n)
-end
-
-function FGIntegral6(t1, t2, beta, m_basal, m_size, d_size, d_metas, S0, n)
-    # transform t from [-1, 1] to [t1, t2] first
-    x, w = gausslegendre(20)
-    ttrans = t1.+((t2-t1)/2).*(x.+1)
-    vals = lambdaN.(ttrans, beta, m_basal, m_size, S0) .*
-        Phi.(t1, ttrans, beta, d_size, d_metas, S0, n) .* 
-        FGIntegral5.(ttrans, t2, beta, m_basal, m_size, d_size, d_metas, S0, n+1) .*
-        (t2-t1)/2 # derivative from change of integration limits.
-    return dot(w, vals) 
-end
-
-function FGSurvivalProbability6(t1, t2, beta, m_basal, m_size, d_size, d_metas, S0, n)
-
-    return (720/(LambdaN(t1, t2, beta, m_basal, m_size, S0))^6) * 
-    FGIntegral6(t1, t2, beta, m_basal, m_size, d_size, d_metas, S0, n)
-end
-
-
 # important probability functions
 
 function ObservationProbability(
@@ -715,55 +608,6 @@ function NumericSurvivalProbability(
     return surv_prob
 end
 
-function FGSurvivalProbability(
-    t⁻, 
-    t, 
-    θ::Vector{<:Real}, 
-    Xt⁻::Vector{<:Real}, 
-    Xt::Vector{<:Real},
-    S0::Real
-    )::Real
-
-    # Unpack parameters
-    beta, m_basal, m_size, d_size, d_metas = θ
-
-    # Unpack data
-    St, Nt, Dt = Xt
-    St⁻, Nt⁻, Dt⁻ = Xt⁻
-
-    if (Nt == Nt⁻)
-        surv_prob = Phi(t⁻, t, beta, d_size, d_metas, S0, Nt⁻)
-    elseif (Nt == Nt⁻ + 1)
-        surv_prob = FGSurvivalProbability1(t⁻, t, beta, m_basal, m_size, d_size, d_metas, S0, Nt⁻)
-    elseif (Nt == Nt⁻ + 2)
-        surv_prob = FGSurvivalProbability2(t⁻, t, beta, m_basal, m_size, d_size, d_metas, S0, Nt⁻)
-    elseif (Nt == Nt⁻ + 3)
-        surv_prob = FGSurvivalProbability3(t⁻, t, beta, m_basal, m_size, d_size, d_metas, S0, Nt⁻)
-    elseif (Nt == Nt⁻ + 4)
-        surv_prob = FGSurvivalProbability4(t⁻, t, beta, m_basal, m_size, d_size, d_metas, S0, Nt⁻)
-    elseif (Nt == Nt⁻ + 5)
-        surv_prob = FGSurvivalProbability5(t⁻, t, beta, m_basal, m_size, d_size, d_metas, S0, Nt⁻)
-    elseif (Nt == Nt⁻ + 6)
-        surv_prob = FGSurvivalProbability6(t⁻, t, beta, m_basal, m_size, d_size, d_metas, S0, Nt⁻)
-    else
-        println("more than 6 metastasis in one interval, $(Nt-Nt⁻)")
-        surv_prob = 1.0
-    end
-    # did not observe more than 6 jumps in one time interval.
-
-  
-    if (surv_prob < 0.0)
-        println("surv_prob is negative for t⁻ = $t⁻, t = $t, Nt⁻ = ", ForwardDiff.value(Nt⁻) ,"Nt = ", ForwardDiff.value(Nt), "\n It is ",ForwardDiff.value(surv_prob), "\n", "parameters: ", [beta, m_basal, m_size, d_size, d_metas])
-        surv_prob=NumericSurvivalProbability(t⁻, t, θ, Xt⁻, Xt, S0)
-    end
-    # if (surv_prob > 1.0)
-    #     println("surv_prob is bigger 1 for t⁻ = $t⁻, t = $t, Nt⁻ = ", ForwardDiff.value(Nt⁻) ,"Nt = ", ForwardDiff.value(Nt), "\n It is ",ForwardDiff.value(surv_prob), "\n", "parameters: ", [beta, m_basal, m_size, d_size, d_metas])
-    # end
-
-    return surv_prob
-end
-
-
 function SurvivalProbability(
     t⁻, 
     t, 
@@ -857,51 +701,6 @@ function NumericDeathProbability(
     return death_prob
 end
 
-function FGDeathProbability(
-    t⁻, 
-    t, 
-    θ::Vector{<:Real}, 
-    Xt⁻::Vector{<:Real}, 
-    Xt::Vector{<:Real},
-    S0::Real
-    )::Real
-
-    # Unpack parameters
-    beta, m_basal, m_size, d_size, d_metas = θ
-
-    # Unpack data
-    St, Nt, Dt = Xt
-    St⁻, Nt⁻, Dt⁻ = Xt⁻
-
-    if (Nt == Nt⁻)
-        death_prob = lambdaD(t, beta, d_size, d_metas, S0, Nt)*Phi(t⁻, t, beta, d_size, d_metas, S0, Nt⁻)
-    elseif (Nt == Nt⁻ + 1)
-        death_prob = lambdaD(t, beta, d_size, d_metas, S0, Nt)*FGSurvivalProbability1(t⁻, t, beta,m_basal, m_size, d_size, d_metas, S0,  Nt⁻)
-    elseif (Nt == Nt⁻ + 2)
-        death_prob = lambdaD(t, beta, d_size, d_metas, S0, Nt)*FGSurvivalProbability2(t⁻, t, beta, m_basal, m_size, d_size, d_metas, S0, Nt⁻)
-    elseif (Nt == Nt⁻ + 3)
-        death_prob = lambdaD(t, beta, d_size, d_metas, S0, Nt)*FGSurvivalProbability3(t⁻, t, beta, m_basal, m_size, d_size, d_metas, S0, Nt⁻)
-    elseif (Nt == Nt⁻ + 4)
-        death_prob = lambdaD(t, beta, d_size, d_metas, S0, Nt)*FGSurvivalProbability4(t⁻, t, beta, m_basal, m_size, d_size, d_metas, S0, Nt⁻)
-    elseif (Nt == Nt⁻ + 5)
-        death_prob = lambdaD(t, beta, d_size, d_metas, S0, Nt)*FGSurvivalProbability5(t⁻, t, beta, m_basal, m_size, d_size, d_metas, S0, Nt⁻)
-    elseif (Nt == Nt⁻ + 6)
-        death_prob = lambdaD(t, beta, d_size, d_metas, S0, Nt)*FGSurvivalProbability6(t⁻, t, beta, m_basal, m_size, d_size, d_metas, S0, Nt⁻)
-    end
-
-  
-    if (death_prob < 0.0)
-        println("death_prob is negative for t⁻ = $t⁻, t = $t, Xt⁻ = $Xt⁻, Xt = $Xt\n It is ",death_prob, "\n", θ)
-        death_prob=1e-50
-    end
-    # if (death_prob > 1.0)
-    #     println("death_prob is bigger 1 for t⁻ = $t⁻, t = $t, Xt⁻ = $Xt⁻, Xt = $Xt\n It is ",death_prob, "\n", θ)
-    # end
-
-    return death_prob
-end
-
-
 function DeathProbability(
     t⁻, 
     t, 
@@ -986,9 +785,7 @@ function TimepointLikelihood(
         obs_prob = 1.0
     else
         # for normal noise
-        # obs_prob = ObservationProbability(Xt, Yt)
-        # or for lognormal noise the following line
-        obs_prob = ObservationProbability(Xt, Yt, sigma=1.0, lognormal_noise=true)
+        obs_prob = ObservationProbability(Xt, Yt)
     end
 
     if (Xt[3] == 0.0) # no death
@@ -997,6 +794,7 @@ function TimepointLikelihood(
     else # death
         process_prob = MetastasisProbability(t⁻, t, θ, Xt⁻, Xt, S0) * (DeathProbability(t⁻, t, θ, Xt⁻, Xt, S0))
     end
+
     if (obs_prob < 0.0)
         println("obs_prob is negative for t⁻ = $t⁻, t = $t, Xt⁻ = $Xt⁻, Xt = $Xt, Yt = $Yt\n It is ",obs_prob)
     end
@@ -1031,7 +829,23 @@ function PatientLogLikelihood(
 
     # Loop over data points
     for i in eachindex(timepoints)
-        if ismissing(Nt[i])
+        # skip if missing metastasis information and no death
+        if ismissing(Nt[i]) && Dt[i] == 0.0
+            continue
+        elseif ismissing(Nt[i]) && Dt[i] == 1.0
+            # continue # inserting this to skip these points makes estimation better...
+            t = timepoints[i]
+            t_1 = timepoints[i-1]
+            marginal_llh = 0
+            for m in Nt[i-1]:Nt[i-1]+5
+                # Set Xt, Yt, Xt⁻1
+                Xt = [St[i], Nt[i], Dt[i]]
+                Yt = convert(Vector{Union{Missing, Float64}}, [Bt[i], m, Dt[i]])
+                Xt_1 = [St[i-1], Nt[i-1], Dt[i-1]]
+                marginal_llh += TimepointLikelihood(t_1, t, θ, Xt_1, Xt, Yt, S0)
+            end
+
+            l += NaNMath.log(marginal_llh)
             continue
         end
 
@@ -1041,23 +855,52 @@ function PatientLogLikelihood(
             Xt = [St[i], Nt[i], Dt[i]] #(this creates Vector{<:Real} so we need Int for the factorial function later)
             Yt = convert(Vector{Union{Missing, Float64}}, [Bt[i], Nt[i], Dt[i]])
             Xt⁻ = [S0, 0, 0]
+
+            l += NaNMath.log(TimepointLikelihood(t⁻, t, θ, Xt⁻, Xt, Yt, S0))
         else
-            # find index of last timepoint with non-missing metastasis value
-            last_met = findlast(x -> !ismissing(x), Nt[1:i-1])
-            if isnothing(last_met)
-                continue
+            # deal with missing metastasis value by marginalizing over all possible values
+            if ismissing(Nt[i-1])
+                # continue # inserting this to skip these points makes estimation better...
+                # find index of last timepoint with non-missing metastasis value
+                last_met = findlast(x -> !ismissing(x), Nt[1:i-1])
+                if isnothing(last_met)
+                    continue
+                end
+                t = timepoints[i]
+                t_1 = timepoints[i-1]
+                t_2 = timepoints[last_met]
+                # Set Xt, Yt, Xt-2
+                Xt = [St[i], Nt[i], Dt[i]]
+                Yt = convert(Vector{Union{Missing, Float64}}, [Bt[i], Nt[i], Dt[i]])
+                Xt_2 = [St[last_met], Nt[last_met], Dt[last_met]]
+                if Dt[i] == 5.0
+                    l += NaNMath.log(TimepointLikelihood(t_2, t, θ, Xt_2, Xt, Yt, S0))
+                else
+                    marginal_llh = 0
+                    for m in Nt[last_met]:Nt[i]
+
+                        Xt_1 = [St[i-1], m, Dt[i-1]]
+                        Yt_1 = convert(Vector{Union{Missing, Float64}}, [Bt[i-1], m, Dt[i-1]])
+
+
+                        marginal_llh += TimepointLikelihood(t_2, t_1, θ, Xt_2, Xt_1, Yt_1, S0) * TimepointLikelihood(t_1, t, θ, Xt_1, Xt, Yt, S0)
+                    end
+
+                    l += NaNMath.log(marginal_llh)
+                end
+            else
+                # Set t, t⁻1
+                t = timepoints[i]
+                t⁻ = timepoints[i-1]
+
+                # Set Xt, Yt, Xt⁻1
+                Xt = [St[i], Nt[i], Dt[i]]
+                Yt = convert(Vector{Union{Missing, Float64}}, [Bt[i], Nt[i], Dt[i]])
+                Xt⁻ = [St[i-1], Nt[i-1], Dt[i-1]]
+
+                l += NaNMath.log(TimepointLikelihood(t⁻, t, θ, Xt⁻, Xt, Yt, S0))
             end
-            # Set t, t⁻1
-            t = timepoints[i]
-            t⁻ = timepoints[last_met]
-
-            # Set Xt, Yt, Xt⁻1
-            Xt = [St[i], Nt[i], Dt[i]]
-            Yt = convert(Vector{Union{Missing, Float64}}, [Bt[i], Nt[i], Dt[i]])
-            Xt⁻ = [St[last_met], Nt[last_met], Dt[last_met]]
         end
-
-        l += NaNMath.log(TimepointLikelihood(t⁻, t, θ, Xt⁻, Xt, Yt, S0))
     end
 
     return l
@@ -1168,78 +1011,6 @@ function NumericNegLogLikelihood(
     end
     return -ll
 end
-
-function FGNegLogLikelihood(
-    θ::Vector{<:Real}, 
-    data; 
-    S0::Real=0.065
-    )::Real
-    n_patients = data.patient_id[end]
-    ll = 0.0
-    for i in 1:n_patients
-        patient_data = data[data.patient_id .== i, :]
-        # Unpack parameters
-        beta, m_basal, m_size, d_size, d_metas = θ
-
-        # Unpack data
-        timepoints, Bt, Nt, Dt = [patient_data.time, 
-                                  patient_data.tumor, 
-                                  patient_data.metastasis, 
-                                  patient_data.death
-                                 ]
-
-        # get X based on parameters
-        St = TumorGrowth.(timepoints, S0, beta)
-
-        # Initialize loglikelihood
-        l = 0.0
-
-        # Loop over data points
-        for i in eachindex(timepoints)
-
-            if (i == 1)
-                t = timepoints[i]
-                t⁻ = 0.0
-                Xt = [St[i], Nt[i], Dt[i]] #(this creates Vector{<:Real} so we need Int for the factorial function later)
-                Yt = [Bt[i], Nt[i], Dt[i]]
-                Xt⁻ = [S0, 0, 0]
-            else
-                # Set t, t⁻1
-                t = timepoints[i]
-                t⁻ = timepoints[i-1]
-
-                # Set Xt, Yt, Xt⁻1
-                Xt = [St[i], Nt[i], Dt[i]]
-                Yt = [Bt[i], Nt[i], Dt[i]]
-                Xt⁻ = [St[i-1], Nt[i-1], Dt[i-1]]
-            end
-
-            # get observation probability (rather rate since it is not normalized)
-            obs_prob = ObservationProbability(Xt, Yt)
-
-            if (Xt[3] == 0.0) # no death
-
-                # get process probability
-                process_prob = MetastasisProbability(t⁻, t, θ, Xt⁻, Xt, S0) * (FGSurvivalProbability(t⁻, t, θ, Xt⁻, Xt, S0))
-            else # death
-                process_prob = MetastasisProbability(t⁻, t, θ, Xt⁻, Xt, S0) * (FGDeathProbability(t⁻, t, θ, Xt⁻, Xt, S0))
-            end
-            if (obs_prob < 0.0)
-                println("obs_prob is negative for t⁻ = $t⁻, t = $t, Xt⁻ = $Xt⁻, Xt = $Xt, Yt = $Yt\n It is ",obs_prob)
-            end
-            if (process_prob < 0.0)
-                println("process_prob is negative for t⁻ = $t⁻, t = $t, Xt⁻ = $Xt⁻, Xt = $Xt, Yt = $Yt\n 
-                and θ=$θ. It is ",process_prob,
-                "\n With metastasisProbability = ", MetastasisProbability(t⁻, t, θ, Xt⁻, Xt, S0), "\n",
-                "and deathProbability = ", FGDeathProbability(t⁻, t, θ, Xt⁻, Xt, S0))
-            end
-            l +=log(obs_prob * process_prob)          
-        end
-        ll += l
-    end
-    return -ll
-end
-
 
 #--------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -1359,7 +1130,7 @@ function TumorNegLogLikelihood(
             # likelihood is basically just the observation probability here.
             # obs_prob = ObservationProbability(Xt, Yt)
             # or for lognormal noise the following line
-            obs_prob = ObservationProbability(Xt, Yt, sigma=1.0, lognormal_noise=true)
+            obs_prob = ObservationProbability(Xt, Yt, sigma=0.5, lognormal_noise=true)
             l += log(obs_prob)
         end
         ll += l
@@ -1458,11 +1229,22 @@ function DeathNegLogLikelihood(
 
         # Loop over data points
         for i in eachindex(timepoints)
-            # reset to a float, value is not used nayways.
-            if ismissing(Bt[i])
-                Bt[i] = 0
-            end
-            if ismissing(Nt[i])
+            if (ismissing(Nt[i])) && (Dt[i] == 0.0)
+                continue
+            elseif (ismissing(Nt[i])) && (Dt[i] == 1.0)
+                t = timepoints[i]
+                t_1 = timepoints[i-1]
+                Xt_1 = [St[i-1], Nt[i-1], Dt[i-1]]
+                marginal_llh = 0
+                for m in Nt[i-1]:Nt[i-1]+5
+                    Xt = [St[i], m, Dt[i]]
+                    death_prob = OnlyDeathProbability(t_1, t, θ, Xt_1, Xt, S0)*OnlyMetastasisProbability(t_1, t, θ, Xt_1, Xt, S0)
+                    if 0.0 < death_prob
+                        marginal_llh += death_prob
+                    end
+                end
+
+                l += NaNMath.log(marginal_llh)
                 continue
             end
 
@@ -1470,31 +1252,211 @@ function DeathNegLogLikelihood(
                 t = timepoints[i]
                 t⁻ = 0.0
                 Xt = [St[i], Nt[i], Dt[i]] #(this creates Vector{<:Real} so we need Int for the factorial function later)
-                Yt = [Bt[i], Nt[i], Dt[i]]
                 Xt⁻ = [S0, 0, 0]
-            else
-                # if ismissing(Nt[i-1])
-                #     continue
-                # end
-                # Set t, t⁻1
-                t = timepoints[i]
-                # find index of last timepoint with non-missing metastasis value
-                last_met = findlast(x -> !ismissing(x), Nt[1:i-1])
-                if isnothing(last_met)
-                    continue
-                end
-                # Set t, t⁻1
-                t = timepoints[i]
-                t⁻ = timepoints[last_met]
 
-                # Set Xt, Yt, Xt⁻1
-                Xt = [St[i], Nt[i], Dt[i]]
-                Yt = [Bt[i], Nt[i], Dt[i]]
-                Xt⁻ = [St[last_met], Nt[last_met], Dt[last_met]]
+                # likelihood is basically just the observation probability here.
+                l += NaNMath.log(OnlyDeathProbability(t⁻, t, θ, Xt⁻, Xt, S0))
+            else
+                # deal with missing metastasis value by marginalizing over all possible values
+                if ismissing(Nt[i-1])
+                    # find index of last timepoint with non-missing metastasis value
+                    last_met = findlast(x -> !ismissing(x), Nt[1:i-1])
+                    if last_met != i-2
+                       println("Error!")
+                    end
+                    if isnothing(last_met)
+                        continue
+                    end
+                    t = timepoints[i]
+                    t_1 = timepoints[i-1]
+                    t_2 = timepoints[last_met]
+                    # Set Xt, Yt, Xt⁻1
+                    Xt = [St[i], Nt[i], Dt[i]]
+                    Xt_2 = [St[last_met], Nt[last_met], Dt[last_met]]
+                    if Dt[i] == 0.0
+                        l += NaNMath.log(OnlyDeathProbability(t_2, t, θ, Xt_2, Xt, S0))
+                    else
+                        marginal_llh = 0
+                        for m in Nt[last_met]:Nt[i]
+                            Xt_1 = [St[i-1], m, Dt[i-1]]
+                            marginal_llh += OnlyDeathProbability(t_2, t_1, θ, Xt_2, Xt_1, S0) * OnlyDeathProbability(t_1, t, θ, Xt_1, Xt, S0)
+                        end
+
+                        l += NaNMath.log(marginal_llh)
+                    end
+                else
+                    # Set t, t⁻1
+                    t = timepoints[i]
+                    t⁻ = timepoints[i-1]
+
+                    # Set Xt, Yt, Xt⁻1
+                    Xt = [St[i], Nt[i], Dt[i]]
+                    Xt⁻ = [St[i-1], Nt[i-1], Dt[i-1]]
+
+                    # likelihood is basically just the observation probability here.
+                    l += NaNMath.log(OnlyDeathProbability(t⁻, t, θ, Xt⁻, Xt, S0))
+                end
+            end
+        end
+        ll += l
+    end
+    return -ll
+end
+
+
+# function to test likelihood formulation
+function TestDeathNegLogLikelihood(
+    θ::Vector{<:Real}, 
+    data; 
+    S0::Real=0.05
+)
+    # Unpack parameters
+    beta = θ[1]
+
+    n_patients = data.patient_id[end]
+    ll = 0.0
+    for p in 1:n_patients
+        patient_data = data[data.patient_id .== p, :]
+        # Unpack data
+        timepoints, Bt, Nt, Dt = [patient_data.time, 
+            patient_data.tumor, 
+            patient_data.metastasis,
+            patient_data.death
+        ]
+
+        # get X based on parameters
+        St = TumorGrowth.(timepoints, S0, beta)
+
+        # Initialize loglikelihood
+        l = 0.0
+
+        # Loop over data points
+        for i in eachindex(timepoints)
+
+            if (ismissing(Nt[i]))
+                t = timepoints[i]
+                t_1 = timepoints[i-1]
+                Xt_1 = [St[i-1], Nt[i-1], Dt[i-1]]
+                marginal_llh = 0
+                for m in Nt[i-1]:Nt[i-1]+5
+                    Xt = [St[i], m, Dt[i]]
+                    death_prob = OnlyDeathProbability(t_1, t, θ, Xt_1, Xt, S0)*OnlyMetastasisProbability(t_1, t, θ, Xt_1, Xt, S0)
+                    if 0.0 < death_prob
+                        marginal_llh += death_prob
+                    end
+                end
+
+                l += NaNMath.log(marginal_llh)
+                continue
             end
 
-            # likelihood is basically just the observation probability here.
-            l += log(OnlyDeathProbability(t⁻, t, θ, Xt⁻, Xt, S0))
+            if (i == 1)
+                t = timepoints[i]
+                t⁻ = 0.0
+                Xt = [St[i], Nt[i], Dt[i]] #(this creates Vector{<:Real} so we need Int for the factorial function later)
+                Xt⁻ = [S0, 0, 0]
+
+                # likelihood is basically just the observation probability here.
+                l += NaNMath.log(OnlyDeathProbability(t⁻, t, θ, Xt⁻, Xt, S0))
+            else
+                # deal with missing metastasis value by marginalizing over all possible values
+                if ismissing(Nt[i-1])
+
+                    # find index of last timepoint with non-missing metastasis value
+                    last_met = findlast(x -> !ismissing(x), Nt[1:i-1])
+                    if isnothing(last_met)
+                        continue
+                    end
+                    t = timepoints[i]
+                    t_1 = timepoints[i-1]
+                    t_2 = timepoints[last_met]
+                    # Set Xt, Yt, Xt⁻1
+                    Xt = [St[i], Nt[i], Dt[i]]
+                    Xt_2 = [St[last_met], Nt[last_met], Dt[last_met]]
+                    marginal_llh = 0
+                    for m in Nt[last_met]:Nt[i]
+                        Xt_1 = [St[i-1], m, Dt[i-1]]
+                        marginal_llh += OnlyDeathProbability(t_1, t, θ, Xt_1, Xt, S0)*OnlyMetastasisProbability(t_2, t_1, θ, Xt_2, Xt_1, S0)
+                    end
+
+                    l += NaNMath.log(marginal_llh)
+                else
+                    # Set t, t⁻1
+                    t = timepoints[i]
+                    t⁻ = timepoints[i-1]
+
+                    # Set Xt, Yt, Xt⁻1
+                    Xt = [St[i], Nt[i], Dt[i]]
+                    Xt⁻ = [St[i-1], Nt[i-1], Dt[i-1]]
+
+                    # likelihood is basically just the observation probability here.
+                    l += NaNMath.log(OnlyDeathProbability(t⁻, t, θ, Xt⁻, Xt, S0))
+                end
+            end
+        end
+        ll += l
+    end
+    return -ll
+end
+
+# function to test likelihood formulation
+function SkipDeathNegLogLikelihood(
+    θ::Vector{<:Real}, 
+    data; 
+    S0::Real=0.05
+)
+    # Unpack parameters
+    beta = θ[1]
+
+    n_patients = data.patient_id[end]
+    ll = 0.0
+    for p in 1:n_patients
+        patient_data = data[data.patient_id .== p, :]
+        # Unpack data
+        timepoints, Bt, Nt, Dt = [patient_data.time, 
+            patient_data.tumor, 
+            patient_data.metastasis,
+            patient_data.death
+        ]
+
+        # get X based on parameters
+        St = TumorGrowth.(timepoints, S0, beta)
+
+        # Initialize loglikelihood
+        l = 0.0
+
+        # Loop over data points
+        for i in eachindex(timepoints)
+
+            if (ismissing(Nt[i]))
+                continue
+            end
+
+            if (i == 1)
+                t = timepoints[i]
+                t⁻ = 0.0
+                Xt = [St[i], Nt[i], Dt[i]] #(this creates Vector{<:Real} so we need Int for the factorial function later)
+                Xt⁻ = [S0, 0, 0]
+
+                # likelihood is basically just the observation probability here.
+                l += NaNMath.log(OnlyDeathProbability(t⁻, t, θ, Xt⁻, Xt, S0))
+            else
+                # deal with missing metastasis value by marginalizing over all possible values
+                if ismissing(Nt[i-1])
+                        continue
+                else
+                    # Set t, t⁻1
+                    t = timepoints[i]
+                    t⁻ = timepoints[i-1]
+
+                    # Set Xt, Yt, Xt⁻1
+                    Xt = [St[i], Nt[i], Dt[i]]
+                    Xt⁻ = [St[i-1], Nt[i-1], Dt[i-1]]
+
+                    # likelihood is basically just the observation probability here.
+                    l += NaNMath.log(OnlyDeathProbability(t⁻, t, θ, Xt⁻, Xt, S0))
+                end
+            end
         end
         ll += l
     end
