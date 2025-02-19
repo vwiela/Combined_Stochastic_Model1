@@ -9,7 +9,9 @@ output/*
 !output/cell_division_joined_optimization_100_starts_LBFGS_distributed_Analytic.jld2
 !output/proportional_joined_optimization_100_starts_LBFGS_distributed_Analytic.jld2
 !output/sparse_proportional_joined_optimization_100_starts_LBFGS_distributed_Analytic.jld2
-
+!output/gyllenberg_hierarchical_optimization_100_starts_SAMIN_Numeric.jld2
+!output/lognormal_proportional_joined_optimization_100_starts_LBFGS_distributed_Analytic.jld2
+!output/missing_proportional_joined_optimization_100_starts_LBFGS_distributed_Analytic.jld2
 
 # Figures and stuff for the paper
 figures/
