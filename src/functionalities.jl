@@ -868,7 +868,7 @@ function mean_survival_curve(km_fits, survival_data, surv_type, group)
 
     plot!(plt, figsize=(1200,1200))
     display(plt)
-    savefig(plt, "output/figures/model_validation_$(surv_type)_$(group)_plot.pdf")
+    savefig(plt, "figures/model_validation_$(surv_type)_$(group)_plot.pdf")
 
     return common_times, mean_survival, ci_lower, ci_upper
 end
