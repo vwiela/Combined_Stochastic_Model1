@@ -1,5 +1,6 @@
 # sampling result files
 *.hdf5
+*.h5
 
 output/*
 !output/additive_treated_joined_optimization_100_starts_LBFGS_distributed_Analytic.jld2
