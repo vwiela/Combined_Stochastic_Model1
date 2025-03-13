@@ -400,7 +400,7 @@ end
 
 function NumericSurvivalProbability1(t1, t2, beta, beta0, rho, delta, m_basal, m_size, d_size, d_metas, S0, n, BMI; treatment_time=nothing, reltol=1e-8)
     integral = (1/(LambdaN(t1, t2, beta, m_basal, m_size, S0))) *
-    hquadrature(u1 ->lambdaN(u1, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI)*
+    pquadrature(u1 ->lambdaN(u1, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI)*
         Phi(t1, u1, beta, d_size, d_metas, S0, n)*
         Phi(u1, t2, beta, d_size, d_metas, S0, n+1),
     t1, t2,
@@ -410,9 +410,9 @@ end
 
 function NumericSurvivalProbability2(t1, t2, beta, beta0, rho, delta, m_basal, m_size, d_size, d_metas, S0, n, BMI; treatment_time=nothing, reltol=1e-8)
     integral = (2/(LambdaN(t1, t2, beta, m_basal, m_size, S0)^2)) *
-    hquadrature(u1 ->lambdaN(u1, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI)*
+    pquadrature(u1 ->lambdaN(u1, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI)*
         Phi(t1, u1, beta, d_size, d_metas, S0, n)*
-        hquadrature(u2 -> lambdaN(u2, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI)*
+        pquadrature(u2 -> lambdaN(u2, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI)*
             Phi(u1, u2, beta, d_size, d_metas, S0, n+1) *
             Phi(u2, t2,  beta, d_size, d_metas, S0, n+2),
         u1, t2
@@ -424,11 +424,11 @@ end
 
 function NumericSurvivalProbability3(t1, t2, beta, beta0, rho, delta, m_basal, m_size, d_size, d_metas, S0, n, BMI; treatment_time=nothing, reltol=1e-8)
     integral = (6/(LambdaN(t1, t2, beta, m_basal, m_size, S0)^3)) *
-    hquadrature(u1 ->lambdaN(u1, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI)*
+    pquadrature(u1 ->lambdaN(u1, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI)*
         Phi(t1, u1, beta, d_size, d_metas, S0, n)*
-        hquadrature(u2 -> lambdaN(u2, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI)*
+        pquadrature(u2 -> lambdaN(u2, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI)*
             Phi(u1, u2, beta, d_size, d_metas, S0, n+1) *
-            hquadrature(u3 -> lambdaN(u3, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI) *
+            pquadrature(u3 -> lambdaN(u3, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI) *
                 Phi(u2, u3, beta, d_size, d_metas, S0, n+2) *
                 Phi(u3, t2, beta, d_size, d_metas, S0, n+3),
             u2, t2
@@ -443,13 +443,13 @@ end
 
 function NumericSurvivalProbability4(t1, t2, beta, beta0, rho, delta, m_basal, m_size, d_size, d_metas, S0, n, BMI; treatment_time=nothing, reltol=1e-8)
     integral = (24/(LambdaN(t1, t2, beta, m_basal, m_size, S0)^4)) *
-    hquadrature(u1 ->lambdaN(u1, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI)*
+    pquadrature(u1 ->lambdaN(u1, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI)*
         Phi(t1, u1, beta, d_size, d_metas, S0, n)*
-        hquadrature(u2 -> lambdaN(u2, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI)*
+        pquadrature(u2 -> lambdaN(u2, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI)*
             Phi(u1, u2, beta, d_size, d_metas, S0, n+1) *
-            hquadrature(u3 -> lambdaN(u3, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI) *
+            pquadrature(u3 -> lambdaN(u3, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI) *
                 Phi(u2, u3, beta, d_size, d_metas, S0, n+2) *
-                hquadrature(u4 -> lambdaN(u4, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI) *
+                pquadrature(u4 -> lambdaN(u4, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI) *
                             Phi(u3, u4, beta, d_size, d_metas, S0, n+3) *
                             Phi(u4, t2, beta, d_size, d_metas, S0, n+4),
                 u3, t2
@@ -465,15 +465,15 @@ end
 
 function NumericSurvivalProbability5(t1, t2, beta, beta0, rho, delta, m_basal, m_size, d_size, d_metas, S0, n, BMI; treatment_time=nothing, reltol=1e-8)
     integral = 120/((LambdaN(t1, t2, beta, m_basal, m_size, S0))^5) *
-    hquadrature(u1 ->lambdaN(u1, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI)*
+    pquadrature(u1 ->lambdaN(u1, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI)*
         Phi(t1, u1, beta, d_size, d_metas, S0, n)*
-        hquadrature(u2 -> lambdaN(u2, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI)*
+        pquadrature(u2 -> lambdaN(u2, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI)*
             Phi(u1, u2, beta, d_size, d_metas, S0, n+1) *
-            hquadrature(u3 -> lambdaN(u3, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI) *
+            pquadrature(u3 -> lambdaN(u3, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI) *
                 Phi(u2, u3, beta, d_size, d_metas, S0, n+2) *
-                hquadrature(u4 -> lambdaN(u4, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI) *
+                pquadrature(u4 -> lambdaN(u4, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI) *
                     Phi(u3, u4, beta, d_size, d_metas, S0, n+3) *
-                    hquadrature(u5 -> lambdaN(u5, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI) *
+                    pquadrature(u5 -> lambdaN(u5, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI) *
                         Phi(u4, u5, beta, d_size, d_metas, S0, n+4) *
                         Phi(u5, t2, beta, d_size, d_metas, S0, n+5),
                     u4, t2
@@ -491,17 +491,17 @@ end
 
 function NumericSurvivalProbability6(t1, t2, beta, beta0, rho, delta, m_basal, m_size, d_size, d_metas, S0, n, BMI; treatment_time=nothing, reltol=1e-8)
     integral = 720/((LambdaN(t1, t2, beta, m_basal, m_size, S0))^6) *
-    hquadrature(u1 ->lambdaN(u1, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI)*
+    pquadrature(u1 ->lambdaN(u1, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI)*
         Phi(t1, u1, beta, d_size, d_metas, S0, n)*
-        hquadrature(u2 -> lambdaN(u2, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI)*
+        pquadrature(u2 -> lambdaN(u2, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI)*
             Phi(u1, u2, beta, d_size, d_metas, S0, n+1) *
-            hquadrature(u3 -> lambdaN(u3, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI) *
+            pquadrature(u3 -> lambdaN(u3, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI) *
                 Phi(u2, u3, beta, d_size, d_metas, S0, n+2) *
-                hquadrature(u4 -> lambdaN(u4, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI) *
+                pquadrature(u4 -> lambdaN(u4, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI) *
                     Phi(u3, u4, beta, d_size, d_metas, S0, n+3) *
-                    hquadrature(u5 -> lambdaN(u5, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI) *
+                    pquadrature(u5 -> lambdaN(u5, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI) *
                         Phi(u4, u5, beta, d_size, d_metas, S0, n+4) *
-                        hquadrature(u6 -> lambdaN(u6, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI) *
+                        pquadrature(u6 -> lambdaN(u6, beta0, rho, delta, m_basal, m_size, S0, treatment_time, BMI) *
                             Phi(u5, u6, beta, d_size, d_metas, S0, n+5) *
                             Phi(u6, t2, beta, d_size, d_metas, S0, n+6),
                         u5, t2

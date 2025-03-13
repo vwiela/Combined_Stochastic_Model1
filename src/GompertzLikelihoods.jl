@@ -192,7 +192,7 @@ end
 
 function NumericSurvivalProbability1(t1, t2, K, α, m_basal, m_size, d_size, d_metas, S0, n)
     integral = (1/(LambdaN(t1, t2, K, α, m_basal, m_size, S0))) *
-    hquadrature(u1 ->lambdaN(u1, K, α, m_basal, m_size, S0)*
+    pquadrature(u1 ->lambdaN(u1, K, α, m_basal, m_size, S0)*
         Phi(t1, u1, K, α, d_size, d_metas, S0, n)*
         Phi(u1, t2, K, α, d_size, d_metas, S0, n+1),
     t1, t2
@@ -202,9 +202,9 @@ end
 
 function NumericSurvivalProbability2(t1, t2, K, α, m_basal, m_size, d_size, d_metas, S0, n)
     integral = (2/(LambdaN(t1, t2, K, α, m_basal, m_size, S0)^2)) *
-    hquadrature(u1 ->lambdaN(u1, K, α, m_basal, m_size, S0)*
+    pquadrature(u1 ->lambdaN(u1, K, α, m_basal, m_size, S0)*
         Phi(t1, u1, K, α, d_size, d_metas, S0, n)*
-        hquadrature(u2 -> lambdaN(u2, K, α, m_basal, m_size, S0)*
+        pquadrature(u2 -> lambdaN(u2, K, α, m_basal, m_size, S0)*
             Phi(u1, u2, K, α, d_size, d_metas, S0, n+1) *
             Phi(u2, t2,  K, α, d_size, d_metas, S0, n+2),
         u1, t2
@@ -217,11 +217,11 @@ end
 
 function NumericSurvivalProbability3(t1, t2, K, α, m_basal, m_size, d_size, d_metas, S0, n)
     integral = (6/(LambdaN(t1, t2, K, α, m_basal, m_size, S0)^3)) *
-    hquadrature(u1 ->lambdaN(u1, K, α, m_basal, m_size, S0)*
+    pquadrature(u1 ->lambdaN(u1, K, α, m_basal, m_size, S0)*
         Phi(t1, u1, K, α, d_size, d_metas, S0, n)*
-        hquadrature(u2 -> lambdaN(u2, K, α, m_basal, m_size, S0)*
+        pquadrature(u2 -> lambdaN(u2, K, α, m_basal, m_size, S0)*
             Phi(u1, u2, K, α, d_size, d_metas, S0, n+1) *
-            hquadrature(u3 -> lambdaN(u3, K, α, m_basal, m_size, S0) *
+            pquadrature(u3 -> lambdaN(u3, K, α, m_basal, m_size, S0) *
                 Phi(u2, u3, K, α, d_size, d_metas, S0, n+2) *
                 Phi(u3, t2, K, α, d_size, d_metas, S0, n+3),
             u2, t2
@@ -235,13 +235,13 @@ end
 
 function NumericSurvivalProbability4(t1, t2, K, α, m_basal, m_size, d_size, d_metas, S0, n)
     integral = (24/(LambdaN(t1, t2, K, α, m_basal, m_size, S0)^4)) *
-    hquadrature(u1 ->lambdaN(u1, K, α, m_basal, m_size, S0)*
+    pquadrature(u1 ->lambdaN(u1, K, α, m_basal, m_size, S0)*
         Phi(t1, u1, K, α, d_size, d_metas, S0, n)*
-        hquadrature(u2 -> lambdaN(u2, K, α, m_basal, m_size, S0)*
+        pquadrature(u2 -> lambdaN(u2, K, α, m_basal, m_size, S0)*
             Phi(u1, u2, K, α, d_size, d_metas, S0, n+1) *
-            hquadrature(u3 -> lambdaN(u3, K, α, m_basal, m_size, S0) *
+            pquadrature(u3 -> lambdaN(u3, K, α, m_basal, m_size, S0) *
                 Phi(u2, u3, K, α, d_size, d_metas, S0, n+2) *
-                hquadrature(u4 -> lambdaN(u4, K, α, m_basal, m_size, S0) *
+                pquadrature(u4 -> lambdaN(u4, K, α, m_basal, m_size, S0) *
                             Phi(u3, u4, K, α, d_size, d_metas, S0, n+3) *
                             Phi(u4, t2, K, α, d_size, d_metas, S0, n+4),
                 u3, t2
@@ -257,15 +257,15 @@ end
 
 function NumericSurvivalProbability5(t1, t2, K, α, m_basal, m_size, d_size, d_metas, S0, n)
     integral = 120/((LambdaN(t1, t2, K, α, m_basal, m_size, S0))^5) *
-    hquadrature(u1 ->lambdaN(u1, K, α, m_basal, m_size, S0)*
+    pquadrature(u1 ->lambdaN(u1, K, α, m_basal, m_size, S0)*
         Phi(t1, u1, K, α, d_size, d_metas, S0, n)*
-        hquadrature(u2 -> lambdaN(u2, K, α, m_basal, m_size, S0)*
+        pquadrature(u2 -> lambdaN(u2, K, α, m_basal, m_size, S0)*
             Phi(u1, u2, K, α, d_size, d_metas, S0, n+1) *
-            hquadrature(u3 -> lambdaN(u3, K, α, m_basal, m_size, S0) *
+            pquadrature(u3 -> lambdaN(u3, K, α, m_basal, m_size, S0) *
                 Phi(u2, u3, K, α, d_size, d_metas, S0, n+2) *
-                hquadrature(u4 -> lambdaN(u4, K, α, m_basal, m_size, S0) *
+                pquadrature(u4 -> lambdaN(u4, K, α, m_basal, m_size, S0) *
                     Phi(u3, u4, K, α, d_size, d_metas, S0, n+3) *
-                    hquadrature(u5 -> lambdaN(u5, K, α, m_basal, m_size, S0) *
+                    pquadrature(u5 -> lambdaN(u5, K, α, m_basal, m_size, S0) *
                         Phi(u4, u5, K, α, d_size, d_metas, S0, n+4) *
                         Phi(u5, t2, K, α, d_size, d_metas, S0, n+5),
                     u4, t2
@@ -283,17 +283,17 @@ end
 
 function NumericSurvivalProbability6(t1, t2, K, α, m_basal, m_size, d_size, d_metas, S0, n)
     integral = 720/((LambdaN(t1, t2, K, α, m_basal, m_size, S0))^6) *
-    hquadrature(u1 ->lambdaN(u1, K, α, m_basal, m_size, S0)*
+    pquadrature(u1 ->lambdaN(u1, K, α, m_basal, m_size, S0)*
         Phi(t1, u1, K, α, d_size, d_metas, S0, n)*
-        hquadrature(u2 -> lambdaN(u2, K, α, m_basal, m_size, S0)*
+        pquadrature(u2 -> lambdaN(u2, K, α, m_basal, m_size, S0)*
             Phi(u1, u2, K, α, d_size, d_metas, S0, n+1) *
-            hquadrature(u3 -> lambdaN(u3, K, α, m_basal, m_size, S0) *
+            pquadrature(u3 -> lambdaN(u3, K, α, m_basal, m_size, S0) *
                 Phi(u2, u3, K, α, d_size, d_metas, S0, n+2) *
-                hquadrature(u4 -> lambdaN(u4, K, α, m_basal, m_size, S0) *
+                pquadrature(u4 -> lambdaN(u4, K, α, m_basal, m_size, S0) *
                     Phi(u3, u4, K, α, d_size, d_metas, S0, n+3) *
-                    hquadrature(u5 -> lambdaN(u5, K, α, m_basal, m_size, S0) *
+                    pquadrature(u5 -> lambdaN(u5, K, α, m_basal, m_size, S0) *
                         Phi(u4, u5, K, α, d_size, d_metas, S0, n+4) *
-                        hquadrature(u6 -> lambdaN(u6, K, α, m_basal, m_size, S0) *
+                        pquadrature(u6 -> lambdaN(u6, K, α, m_basal, m_size, S0) *
                             Phi(u5, u6, K, α, d_size, d_metas, S0, n+5) *
                             Phi(u6, t2, K, α, d_size, d_metas, S0, n+6),
                         u5, t2
