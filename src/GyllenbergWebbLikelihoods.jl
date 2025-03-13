@@ -103,7 +103,7 @@ function TotalTumorSize(t, P0, b, μ)
     initial_conditions = [sys.P => P0, sys.Q => 0.0, sys.De => 0.0]
     prob = ODEProblem(sys, parammap, (0.0, t), initial_conditions)
     sol = solve(prob, Tsit5(), reltol=1e-8, abstol=1e-8)
-    return sum(sol(t))
+    return sum(sol(t)[1:2])
 end
 
 #-----------------------------------------------------------------------------------------------------------------------------------------------
@@ -119,7 +119,7 @@ function lambdaN(
     sol::ODESolution,
     )
 
-    S = sum(sol(t))
+    S = sum(sol(t)[1:2])
     return m_basal + m_size * sqrt(S)
 end
 
@@ -131,7 +131,7 @@ function lambdaD(
     Nt
     )
 
-    S = sum(sol(t))
+    S = sum(sol(t)[1:2])
     return d_size * sqrt(S) + d_metas * Nt
 end
 
@@ -548,7 +548,7 @@ function PatientLogLikelihood(
     timepoints, Bt, Nt, Dt = data
 
     # get X based on parameters
-    St = [sum(sol(t)) for t in timepoints]
+    St = [sum(sol(t)[1:2]) for t in timepoints]
 
     # Initialize loglikelihood
     l = 0.0
@@ -702,7 +702,7 @@ function TumorNegLogLikelihood(
         ]
 
         # get X based on parameters
-        St = [sum(sol(t)) for t in timepoints]
+        St = [sum(sol(t)[1:2]) for t in timepoints]
 
         # Initialize loglikelihood
         l = 0.0
@@ -760,7 +760,7 @@ function MetastasisNegLogLikelihood(
             patient_data.death
         ]
 
-        St = [sum(sol(t)) for t in timepoints]
+        St = [sum(sol(t)[1:2]) for t in timepoints]
         # Initialize loglikelihood
         l = 0.0
 
@@ -817,7 +817,7 @@ function DeathNegLogLikelihood(
             patient_data.death
         ]
 
-        St = [sum(sol(t)) for t in timepoints]
+        St = [sum(sol(t)[1:2]) for t in timepoints]
 
         # Initialize loglikelihood
         l = 0.0
