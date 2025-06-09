@@ -1,6 +1,6 @@
 # Combined_Stochastic_Model
 
-Code complimenting the project and paper "Combined Stochastic Model for the Evaluation of Cancer Progression and Patient Trajectories", preprint availabe on [bioRxiv](https://www.biorxiv.org/content/10.1101/2024.09.26.615161v1).
+Code complimenting the project and paper "A Stochastic Modelling Framework for Cancer Patient Trajectories: Combining Tumour Growth, Metastasis, and Survival.", published paper available [here](https://link.springer.com/article/10.1007/s00285-025-02229-6).
 
 The src folder contains all the following code used for model building, optimization and visualization of the results:
 - `Project.toml`and `Manifest.toml` specifying the used packages in the Julia 1.11.2 environment.
